@@ -44,7 +44,7 @@ public final class Constants {
         public static final double DRIVE_CONVERSION_FACTOR = WHEEL_CIRCUMFERENCE_METERS / DRIVE_RATIO;
 
         public static final double DRIVE_KS = 0;
-        public static final double DRIVE_KV = 1;
+        public static final double DRIVE_KV = 1.75;
         public static final double DRIVE_KA = 0;
 
         public static final double MAX_SPEED_MPS = 10;
@@ -113,8 +113,8 @@ public final class Constants {
 
     public static class AutoConstants {
         //Trajectory following values
-        public static final double MAX_VELOCITY_PERCENT_OUTPUT = 2.00;
-        public static final double MAX_ACCELERATION_PERCENT_OUTPUT = 0.6;
+        public static final double MAX_VELOCITY_PERCENT_OUTPUT = 4.00;
+        public static final double MAX_ACCELERATION_PERCENT_OUTPUT = 1;
         
         public static final PIDController CONTROLLER_X =
             new PIDController(1.5, 0, 0);
@@ -122,7 +122,7 @@ public final class Constants {
             new PIDController(1.5, 0, 0);
 
         public static final PIDController CONTROLLER_THETA =
-                new PIDController(1.0, 0.0, 0.1);
+                new PIDController(1.5, 0.0, 0.1);
         
         //Auto balance constants
         public static final double BALANCE_P = -0.02;
