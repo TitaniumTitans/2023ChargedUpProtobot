@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import frc.robot.Constants;
 import frc.robot.subsystems.swerve.SwerveDrivetrain;
 import lib.utils.Utils;
 
@@ -37,11 +38,11 @@ public class SwerveTeleopDrive extends CommandBase {
   public void execute() {
     double x = -m_driverController.getLeftY();
     double y = -m_driverController.getLeftX();
-    double z = m_driverController.getRightX();
+    double z = -m_driverController.getRightX();
 
-    x = Utils.deadBand(x);
-    y = Utils.deadBand(y);
-    z = Utils.deadBand(z);
+    x = Utils.deadBand(x) * Constants.ModuleConstants.MAX_SPEED_MPS;
+    y = Utils.deadBand(y) * Constants.ModuleConstants.MAX_SPEED_MPS;
+    z = Utils.deadBand(z) * Constants.ModuleConstants.MAX_SPEED_MPS;
     m_drive.setModuleStates(x, y, z);
   }
 

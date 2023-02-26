@@ -11,10 +11,13 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import frc.robot.Constants.ModuleConstants;
 import lib.factories.SparkMaxFactory;
 import lib.utils.Rev.SparkMaxConfigs;
@@ -37,6 +40,9 @@ public class SwerveModNeo {
 
   private double m_lastAngle;
   private boolean m_invert;
+  private boolean m_openLoop = false;
+
+  private SimpleMotorFeedforward m_driveFeedforward;
 
   public SwerveModNeo(int moduleNumber, double offsets, int[] canIds, boolean driveInvert) {
     this.moduleNumber = moduleNumber;
@@ -44,7 +50,7 @@ public class SwerveModNeo {
     SparkMaxFactory.SparkMaxConfig config = new SparkMaxFactory.SparkMaxConfig();
     config.setCurrentLimit(50);
 
-    m_driveMotor = SparkMaxFactory.Companion.createSparkMax(canIds[0], config);
+    m_driveMotor = new CANSparkMax(canIds[0], CANSparkMaxLowLevel.MotorType.kBrushless);
     m_driveEncoder = m_driveMotor.getEncoder();
 
     m_angleMotor = new CANSparkMax(canIds[1], CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -56,19 +62,31 @@ public class SwerveModNeo {
 
     configureDevices();
     m_lastAngle = getState().angle.getRadians();
+
+    m_driveFeedforward = new SimpleMotorFeedforward(ModuleConstants.DRIVE_KS, ModuleConstants.DRIVE_KV, ModuleConstants.DRIVE_KA);
   }
 
   public void setDesiredState(SwerveModuleState state) {
     // Prevents angle motor from turning further than it needs to. 
     // E.G. rotating from 10 to 270 degrees CW vs CCW.
-//    state = SwerveModuleState.optimize(state, getState().angle);
+    state = SwerveModuleState.optimize(state, getState().angle);
 
     double speed = state.speedMetersPerSecond;
-    m_driveMotor.set(speed);
+    SmartDashboard.putNumber("Desired Drive Speed " + moduleNumber, speed);
+
+    if (m_openLoop) {
+      m_driveMotor.set(speed / ModuleConstants.MAX_SPEED_MPS);
+    } else {
+      speed = m_driveFeedforward.calculate(speed);
+      m_driveMotor.setVoltage(speed);
+    }
 
     double angle = Math.abs(state.speedMetersPerSecond) <= 0.0
       ? m_lastAngle
       : state.angle.getRadians();
+
+    SmartDashboard.putNumber("Actual Drive Speed " + moduleNumber, m_driveEncoder.getVelocity());
+    SmartDashboard.putNumber("Drive Speed Percent " + moduleNumber, m_driveMotor.getAppliedOutput());
 
     m_anglePID.setReference(angle, CANSparkMax.ControlType.kPosition);
     m_lastAngle = angle;
@@ -138,7 +156,8 @@ public class SwerveModNeo {
     autoRetry(() -> m_driveMotor.setOpenLoopRampRate(0.5));
 
 
-    autoRetry(() -> m_driveEncoder.setPositionConversionFactor(ModuleConstants.WHEEL_CIRCUMFERENCE_METERS / ModuleConstants.DRIVE_RATIO));
+    autoRetry(() -> m_driveEncoder.setPositionConversionFactor(ModuleConstants.DRIVE_CONVERSION_FACTOR));
+    autoRetry(() -> m_driveEncoder.setVelocityConversionFactor(ModuleConstants.DRIVE_CONVERSION_FACTOR / 60));
     autoRetry(() -> m_driveEncoder.setPosition(0));
     SparkMaxConfigs.configCanStatusFrames(m_driveMotor);
 

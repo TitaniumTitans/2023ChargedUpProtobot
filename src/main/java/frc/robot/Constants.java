@@ -31,7 +31,7 @@ public final class Constants {
     public static final class ModuleConstants{
         // Physical wheel constants
         public static final double WHEEL_DIAMETER_METERS = Units.inchesToMeters(4.0);
-        public static final double WHEEL_CIRCUMFERENCE_METERS = 2 * Math.PI * (WHEEL_DIAMETER_METERS / 2);
+        public static final double WHEEL_CIRCUMFERENCE_METERS = Math.PI * WHEEL_DIAMETER_METERS;
 
         // Gear ratio
         public static final double TURNING_RATIO = (50.0 / 14.0) * (60.0 / 10.0);
@@ -41,6 +41,13 @@ public final class Constants {
         public static final double MODULE_KP = 0.26;
         public static final double MODULE_KD = 3;
         public static final double POSITION_CONVERSION_FACTOR = ((Math.PI * 2) / TURNING_RATIO);
+        public static final double DRIVE_CONVERSION_FACTOR = WHEEL_CIRCUMFERENCE_METERS / DRIVE_RATIO;
+
+        public static final double DRIVE_KS = 0;
+        public static final double DRIVE_KV = 1;
+        public static final double DRIVE_KA = 0;
+
+        public static final double MAX_SPEED_MPS = 10;
     }
 
     public static final class DriveConstants {
@@ -52,10 +59,10 @@ public final class Constants {
         public static final int GYRO_CAN = 15;
 
         //Thanos Offsets
-        public static final double MOD_FR_OFFSET = 110.8;
-        public static final double MOD_FL_OFFSET = 173.6 ;
-        public static final double MOD_BR_OFFSET = -163.0;
-        public static final double MOD_BL_OFFSET = 0.610;
+        public static final double MOD_FR_OFFSET = -161.7;
+        public static final double MOD_FL_OFFSET = -33.2 + 180;
+        public static final double MOD_BR_OFFSET = -97.6;
+        public static final double MOD_BL_OFFSET = -106.8;
         // Competition Offset
 
         // Kinematics
@@ -106,19 +113,16 @@ public final class Constants {
 
     public static class AutoConstants {
         //Trajectory following values
-        public static final double MAX_VELOCITY_PERCENT_OUTPUT = 0.5;
-        public static final double MAX_ACCELERATION_PERCENT_OUTPUT = 0.5;
-
-        public static final Constraints THETA_CONSTRAINTS = 
-            new Constraints(MAX_VELOCITY_PERCENT_OUTPUT, MAX_ACCELERATION_PERCENT_OUTPUT);
-
-        public static final ProfiledPIDController THETA_CONTROLLER = 
-            new ProfiledPIDController(0.0, 0.0, 0.0, THETA_CONSTRAINTS);
+        public static final double MAX_VELOCITY_PERCENT_OUTPUT = 2.00;
+        public static final double MAX_ACCELERATION_PERCENT_OUTPUT = 0.6;
         
         public static final PIDController CONTROLLER_X =
-            new PIDController(0.5, 0, 0);
+            new PIDController(1.5, 0, 0);
         public static final PIDController CONTROLLER_Y =
-            new PIDController(0.5, 0, 0);
+            new PIDController(1.5, 0, 0);
+
+        public static final PIDController CONTROLLER_THETA =
+                new PIDController(1.0, 0.0, 0.1);
         
         //Auto balance constants
         public static final double BALANCE_P = -0.02;

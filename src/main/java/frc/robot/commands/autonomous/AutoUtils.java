@@ -32,41 +32,33 @@ public class AutoUtils {
 
     private static final PathPlannerTrajectory m_defaultAutoGen = PathPlanner.loadPath("DefaultPath", m_defaultConfig);
 
+    public static PathConstraints getDefaultConstraints() {
+        return m_defaultConfig;
+    }
+
 
     //Default getters
     public static Command getDefaultTrajectory(SwerveDrivetrain swerve) {
-        return new SequentialCommandGroup(
-            new InstantCommand(() -> swerve.resetPose(m_defaultAutoGen.getInitialHolonomicPose())),
-
-            new PPSwerveControllerCommand(m_defaultAutoGen, 
-            swerve::getPose, 
-            DriveConstants.DRIVE_KINEMATICS, 
-            AutoConstants.CONTROLLER_X, 
-            AutoConstants.CONTROLLER_Y, 
-            new PIDController(0, 0, 0), 
-            swerve::setModuleStates,
-            true,
-            swerve)
-        );
+        return getAutoRoutine(m_defaultAutoGen, swerve);
     }
 
     public static FollowPathWithEvents getPathWithEvents(SwerveDrivetrain swerve) {
-    HashMap<String, Command> defaultEventMap = new HashMap<>();
-    defaultEventMap.put("Event 1", new PrintCommand("Marker 1"));
-    defaultEventMap.put("event 2", new PrintCommand("Marker 2"));
-    return new FollowPathWithEvents(getDefaultTrajectory(swerve), m_defaultAutoGen.getMarkers(), defaultEventMap);
+        HashMap<String, Command> defaultEventMap = new HashMap<>();
+        defaultEventMap.put("Event 1", new PrintCommand("Marker 1"));
+        defaultEventMap.put("event 2", new PrintCommand("Marker 2"));
+        return new FollowPathWithEvents(getDefaultTrajectory(swerve), m_defaultAutoGen.getMarkers(), defaultEventMap);
     }
 
     public static Command getAutoRoutine(PathPlannerTrajectory traj, SwerveDrivetrain swerve){
         return new SequentialCommandGroup(
-            new InstantCommand(() -> swerve.resetPose(m_defaultAutoGen.getInitialHolonomicPose())),
+            new InstantCommand(() -> swerve.resetPose(traj.getInitialHolonomicPose())),
 
-            new PPSwerveControllerCommand(m_defaultAutoGen, 
+            new PPSwerveControllerCommand(traj,
             swerve::getPose, 
             DriveConstants.DRIVE_KINEMATICS, 
             AutoConstants.CONTROLLER_X, 
             AutoConstants.CONTROLLER_Y, 
-            new PIDController(0, 0, 0), 
+            AutoConstants.CONTROLLER_THETA,
             swerve::setModuleStates,
             true,
             swerve)

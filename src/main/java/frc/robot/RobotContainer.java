@@ -4,8 +4,12 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.commands.autonomous.DoubleChargeSpin;
 import frc.robot.commands.test.TestModuleCommand;
 import frc.robot.commands.test.TestSwerveCommand;
 import frc.robot.commands.test.TestSwerveRotationCommand;
@@ -78,8 +82,9 @@ public class RobotContainer {
    * Use this method to add autonomous routines to a sendable chooser
    */
   public void configAutoChooser() {
-    m_autoChooser.addDefaultOption("Default Trajectory", AutoUtils.getDefaultTrajectory(m_drive));
-    m_autoChooser.addOption("Event Map Trajectory", AutoUtils.getPathWithEvents(m_drive));
+    m_autoChooser.addDefaultOption("Forward Left", AutoUtils.getDefaultTrajectory(m_drive));
+    m_autoChooser.addOption("Double Charge Spin", DoubleChargeSpin.getPath(m_drive).andThen(new AutoBalance(m_drive)));
+    m_autoChooser.addOption("Test for Heading", DoubleChargeSpin.getTestPath(m_drive));
   }
 
   /**
@@ -87,6 +92,7 @@ public class RobotContainer {
    */
   public void configDashboard() {
     ShuffleboardTab testCommands = Shuffleboard.getTab("Commands");
+    ShuffleboardTab testTrajectories = Shuffleboard.getTab("Trajectories");
 
     // Swerve Test Commands
     testCommands.add("Swerve Forward", new TestSwerveCommand(m_drive, 0));
@@ -102,6 +108,12 @@ public class RobotContainer {
     
     testCommands.add("Auto Balance", new AutoBalance(m_drive));
     testCommands.add("Reset Pose", new InstantCommand(() -> m_drive.resetPoseBase())).withSize(2, 1);
+
+    testTrajectories.add("Forward Traj", new InstantCommand(() -> {
+      CommandScheduler.getInstance().schedule(
+              AutoUtils.getDefaultTrajectory(m_drive)
+      );
+    }));
   }
 
   /**
