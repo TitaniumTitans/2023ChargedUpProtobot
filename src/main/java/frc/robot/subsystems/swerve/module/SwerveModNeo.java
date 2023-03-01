@@ -30,6 +30,7 @@ public class SwerveModNeo {
 
   private final CANSparkMax m_driveMotor;
   private final RelativeEncoder m_driveEncoder;
+  private final SparkMaxPIDController m_drivePID;
 
   private final CANSparkMax m_angleMotor;
   private final RelativeEncoder m_angleEncoder;
@@ -52,6 +53,7 @@ public class SwerveModNeo {
 
     m_driveMotor = new CANSparkMax(canIds[0], CANSparkMaxLowLevel.MotorType.kBrushless);
     m_driveEncoder = m_driveMotor.getEncoder();
+    m_drivePID = m_driveMotor.getPIDController();
 
     m_angleMotor = new CANSparkMax(canIds[1], CANSparkMaxLowLevel.MotorType.kBrushless);
     m_angleEncoder = m_angleMotor.getEncoder();
@@ -77,8 +79,8 @@ public class SwerveModNeo {
     if (m_openLoop) {
       m_driveMotor.set(speed / ModuleConstants.MAX_SPEED_MPS);
     } else {
-      speed = m_driveFeedforward.calculate(speed);
-      m_driveMotor.setVoltage(speed);
+      double speedff = m_driveFeedforward.calculate(speed);
+      m_drivePID.setReference(speed, CANSparkMax.ControlType.kVoltage, 0, speedff);
     }
 
     double angle = Math.abs(state.speedMetersPerSecond) <= 0.0
@@ -160,6 +162,8 @@ public class SwerveModNeo {
     autoRetry(() -> m_driveEncoder.setVelocityConversionFactor(ModuleConstants.DRIVE_CONVERSION_FACTOR / 60));
     autoRetry(() -> m_driveEncoder.setPosition(0));
     SparkMaxConfigs.configCanStatusFrames(m_driveMotor);
+
+    autoRetry(() -> m_drivePID.setP(0.5));
 
     // Angle motor configuration.
     autoRetry(() -> m_angleMotor.restoreFactoryDefaults());
